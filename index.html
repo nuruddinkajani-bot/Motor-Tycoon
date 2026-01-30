@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Build your automotive empire from startup to global dominance">
+  <meta name="theme-color" content="#3b82f6">
+  <title>⚙️ MOTOR TYCOON - Industrial Empire Simulator</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- React and Babel for JSX -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #e0e0e0;
+      font-family: 'Space Mono', monospace;
+      overflow-x: hidden;
+    }
+    
+    .game-container {
+      min-height: 100vh;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        #0a0a0f;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .game-container::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.02) 3px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.02) 3px);
+      pointer-events: none;
+      opacity: 0.3;
+    }
+    
+    .header {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      animation: glow 3s ease-in-out infinite;
+    }
+    
+    @keyframes glow {
+      0%, 100% { filter: brightness(1) drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
+      50% { filter: brightness(1.2) drop-shadow(0 0 30px rgba(139, 92, 246, 0.8)); }
+    }
+    
+    .tagline {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 30px;
+      font-style: italic;
+      letter-spacing: 2px;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .panel {
+      background: rgba(30, 30, 45, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .panel:hover {
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 48px rgba(59, 130, 246, 0.2);
+    }
+    
+    .panel:hover::before {
+      opacity: 1;
+    }
+    
+    .panel-header {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #3b82f6;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border-left: 3px solid #3b82f6;
+    }
+    
+    .stat-label {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+    
+    .stat-value {
+      color: #fff;
+      font-weight: 700;
+      font-family: 'Orbitron', sans-serif;
+    }
+    
+    .stat-value.positive {
+      color: #10b981;
+    }
+    
+    .stat-value.negative {
+      color: #ef4444;
+    }
+    
+    .crisis-alert {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+      border: 2px solid #ef4444;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 20px 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
+      50% { box-shadow: 0 0 50px rgba(239, 68, 68, 0.6); }
+    }
+    
+    .crisis-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fca5a5;
+      margin-bottom: 5px;
+    }
+    
+    .button {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+    
+    .button:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+    }
+    
+    .button:active {
+      transform: translateY(0);
+    }
+    
+    .button.danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    .button.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .button:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    
+    input[type="number"], input[type="range"] {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      flex: 1;
+    }
+    
+    input[type="number"]:focus, input[type="range"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .factory-canvas {
+      width: 100%;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .model-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .model-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .model-card.active {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+    
+    .model-card.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    
+    .model-card:hover:not(.locked) {
+      border-color: #3b82f6;
+      transform: scale(1.05);
+    }
+    
+    .model-name {
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 5px;
+    }
+    
+    .model-price {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    
+    .news-feed {
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+    }
+    
+    .news-item {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      animation: slideIn 0.5s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+    
+    .time-control {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      align-items: center;
+    }
+    
+    .time-display {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: #3b82f6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        font-size: 2rem;
+      }
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 🔥 ECONOMIC CRISIS ENGINE
+    const CRISIS_EVENTS = [
+      { id: 'pandemic', name: 'Global Pandemic', impact: -0.4, duration: 8, icon: '🦠' },
+      { id: 'chip_shortage', name: 'Semiconductor Crisis', impact: -0.3, duration: 6, icon: '⚡' },
+      { id: 'recession', name: 'Economic Recession', impact: -0.35, duration: 10, icon: '📉' },
+      { id: 'oil_shock', name: 'Energy Crisis', impact: -0.25, duration: 5, icon: '⛽' },
+      { id: 'trade_war', name: 'Trade War', impact: -0.2, duration: 7, icon: '🌍' },
+      { id: 'boom', name: 'Economic Boom', impact: 0.3, duration: 6, icon: '🚀' },
+    ];
+
+    const FUNDING_STAGES = [
+      { name: 'Bootstrapped', amount: 0, pressure: 'Survival', unlock: 0 },
+      { name: 'Seed Round', amount: 500000, pressure: 'Product-Market Fit', unlock: 10000 },
+      { name: 'Series A', amount: 5000000, pressure: 'Scale or Die', unlock: 100000 },
+      { name: 'Series B', amount: 25000000, pressure: 'Market Dominance', unlock: 500000 },
+      { name: 'IPO Ready', amount: 100000000, pressure: 'Public Scrutiny', unlock: 2000000 },
+    ];
+
+    const CAR_MODELS = [
+      { id: 'economy', name: 'EconoBox', price: 15000, cost: 12000, r_d: 0, popularity: 0.8 },
+      { id: 'sedan', name: 'CityCruiser', price: 28000, cost: 22000, r_d: 50000, popularity: 0.7 },
+      { id: 'suv', name: 'AdventureMax', price: 45000, cost: 35000, r_d: 200000, popularity: 0.6 },
+      { id: 'electric', name: 'VoltDrive', price: 55000, cost: 42000, r_d: 500000, popularity: 0.5 },
+      { id: 'luxury', name: 'PrestigeLux', price: 95000, cost: 70000, r_d: 1000000, popularity: 0.3 },
+      { id: 'autonomous', name: 'FutureNav', price: 120000, cost: 90000, r_d: 5000000, popularity: 0.2 },
+    ];
+
+    // Simple icons as SVG
+    const DollarSign = () => <span style={{fontSize: '24px'}}>💰</span>;
+    const Factory = () => <span style={{fontSize: '24px'}}>🏭</span>;
+    const TrendingUp = () => <span style={{fontSize: '24px'}}>📈</span>;
+    const Cpu = () => <span style={{fontSize: '24px'}}>🔬</span>;
+    const Settings = () => <span style={{fontSize: '24px'}}>⚙️</span>;
+    const Camera = () => <span style={{fontSize: '24px'}}>🚗</span>;
+    const Award = () => <span style={{fontSize: '24px'}}>📰</span>;
+    const PlayCircle = () => <span style={{fontSize: '20px'}}>▶️</span>;
+    const PauseCircle = () => <span style={{fontSize: '20px'}}>⏸️</span>;
+
+    // 🎨 FACTORY VISUALIZATION
+    const FactoryFloor = ({ workers, efficiency, producing }) => {
+      const canvasRef = useRef(null);
+      
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        
+        let frame = 0;
+        let animationId;
+        
+        const animate = () => {
+          ctx.fillStyle = 'rgba(10, 10, 15, 0.3)';
+          ctx.fillRect(0, 0, w, h);
+          
+          // Conveyor belt
+          ctx.strokeStyle = efficiency > 0.7 ? '#10b981' : efficiency > 0.4 ? '#f59e0b' : '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(50, h/2);
+          ctx.lineTo(w - 50, h/2);
+          ctx.stroke();
+          
+          // Moving parts
+          for (let i = 0; i < 5; i++) {
+            const x = ((frame * 2 + i * (w / 5)) % w);
+            ctx.fillStyle = producing ? '#3b82f6' : '#6b7280';
+            ctx.fillRect(x, h/2 - 10, 30, 20);
+          }
+          
+          // Workers
+          for (let i = 0; i < Math.min(workers, 8); i++) {
+            const x = 100 + i * 80;
+            const y = h/2 + 60 + Math.sin(frame * 0.05 + i) * 5;
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          
+          frame++;
+          animationId = requestAnimationFrame(animate);
+        };
+        
+        animate();
+        return () => cancelAnimationFrame(animationId);
+      }, [workers, efficiency, producing]);
+      
+      return <canvas ref={canvasRef} width={600} height={200} className="factory-canvas" />;
+    };
+
+    // 🏢 MAIN GAME
+    const ModernMotorTycoon = () => {
+      const [year, setYear] = useState(2008);
+      const [month, setMonth] = useState(1);
+      const [cash, setCash] = useState(50000);
+      const [debt, setDebt] = useState(0);
+      const [valuation, setValuation] = useState(50000);
+      
+      const [workers, setWorkers] = useState(10);
+      const [factories, setFactories] = useState(1);
+      const [rdInvestment, setRdInvestment] = useState(0);
+      const [marketingBudget, setMarketingBudget] = useState(0);
+      
+      const [unlockedModels, setUnlockedModels] = useState(['economy']);
+      const [currentModel, setCurrentModel] = useState('economy');
+      const [production, setProduction] = useState(0);
+      const [inventory, setInventory] = useState(0);
+      
+      const [morale, setMorale] = useState(0.8);
+      const [brandReputation, setBrandReputation] = useState(0.5);
+      const [activeCrisis, setActiveCrisis] = useState(null);
+      const [crisisDuration, setCrisisDuration] = useState(0);
+      
+      const [fundingStage, setFundingStage] = useState(0);
+      const [gameSpeed, setGameSpeed] = useState(1);
+      const [paused, setPaused] = useState(false);
+      
+      const [newsLog, setNewsLog] = useState(['🚀 You founded Motor Innovations Inc. The journey begins...']);
+
+      // Crisis trigger
+      useEffect(() => {
+        const crisisCheck = setInterval(() => {
+          if (!activeCrisis && Math.random() < 0.02 && !paused) {
+            const crisis = CRISIS_EVENTS[Math.floor(Math.random() * CRISIS_EVENTS.length)];
+            setActiveCrisis(crisis);
+            setCrisisDuration(crisis.duration);
+            addNews(`${crisis.icon} ALERT: ${crisis.name} hits the industry!`);
+          }
+        }, 3000);
+        
+        return () => clearInterval(crisisCheck);
+      }, [activeCrisis, paused]);
+
+      // Time progression
+      useEffect(() => {
+        if (paused) return;
+        
+        const timer = setInterval(() => {
+          setMonth(prev => {
+            if (prev >= 12) {
+              setYear(y => y + 1);
+              return 1;
+            }
+            return prev + 1;
+          });
+          
+          if (activeCrisis && crisisDuration > 0) {
+            setCrisisDuration(prev => {
+              if (prev <= 1) {
+                addNews(`${activeCrisis.icon} Crisis over: ${activeCrisis.name} subsides`);
+                setActiveCrisis(null);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }
+          
+          processMonth();
+        }, 1000 / gameSpeed);
+        
+        return () => clearInterval(timer);
+      }, [paused, gameSpeed, activeCrisis, crisisDuration, workers, currentModel, inventory, morale, marketingBudget]);
+
+      const processMonth = () => {
+        const model = CAR_MODELS.find(m => m.id === currentModel);
+        if (!model) return;
+        
+        const baseProduction = Math.floor((workers / 10) * morale * factories);
+        const crisisMultiplier = activeCrisis ? (1 + activeCrisis.impact) : 1;
+        const produced = Math.max(0, Math.floor(baseProduction * crisisMultiplier));
+        
+        setProduction(produced);
+        setInventory(prev => prev + produced);
+        
+        const baseDemand = model.popularity * (brandReputation + 0.3) * (1 + marketingBudget / 100000);
+        const demand = Math.floor(baseDemand * 10 * crisisMultiplier);
+        const sold = Math.min(inventory, demand);
+        
+        const revenue = sold * model.price;
+        const productionCost = produced * model.cost;
+        const workerCost = workers * 3000;
+        const factoryCost = factories * 10000;
+        const debtInterest = debt * 0.005;
+        
+        const netIncome = revenue - productionCost - workerCost - factoryCost - marketingBudget - debtInterest;
+        
+        setCash(prev => prev + netIncome);
+        setInventory(prev => prev - sold);
+        setValuation(prev => prev + netIncome * 0.5);
+        
+        if (netIncome < 0) {
+          setMorale(prev => Math.max(0.2, prev - 0.02));
+        } else {
+          setMorale(prev => Math.min(1, prev + 0.01));
+        }
+        
+        setBrandReputation(prev => Math.min(1, prev + (marketingBudget / 1000000) + (sold > 0 ? 0.002 : 0)));
+        
+        if (cash < -100000) {
+          addNews('💀 GAME OVER: Your company filed for bankruptcy!');
+          setPaused(true);
+        }
+      };
+
+      const addNews = (message) => {
+        setNewsLog(prev => [`${year}/${month}: ${message}`, ...prev.slice(0, 9)]);
+      };
+
+      const raiseFunding = () => {
+        if (fundingStage >= FUNDING_STAGES.length - 1) return;
+        const nextStage = FUNDING_STAGES[fundingStage + 1];
+        if (valuation < nextStage.unlock) {
+          addNews('❌ Valuation too low for funding round');
+          return;
+        }
+        
+        setCash(prev => prev + nextStage.amount);
+        setFundingStage(prev => prev + 1);
+        addNews(`💎 ${nextStage.name}: Raised $${(nextStage.amount / 1000000).toFixed(1)}M!`);
+      };
+
+      const investInRD = (modelId) => {
+        const model = CAR_MODELS.find(m => m.id === modelId);
+        if (!model || unlockedModels.includes(modelId)) return;
+        
+        if (rdInvestment >= model.r_d) {
+          setUnlockedModels(prev => [...prev, modelId]);
+          setRdInvestment(0);
+          addNews(`🔬 R&D Complete: ${model.name} ready for production!`);
+        }
+      };
+
+      useEffect(() => {
+        CAR_MODELS.forEach(model => investInRD(model.id));
+      }, [rdInvestment]);
+
+      const autonomousDrivingEnabled = year >= 2025;
+
+      return (
+        <div className="game-container">
+          <h1 className="header">⚙️ MOTOR TYCOON ⚙️</h1>
+          <div className="tagline">Build. Disrupt. Dominate. Your industrial empire awaits.</div>
+
+          <div className="time-control">
+            <button className="button" onClick={() => setPaused(!paused)}>
+              {paused ? <PlayCircle /> : <PauseCircle />}
+            </button>
+            <div className="time-display">{year} / {month.toString().padStart(2, '0')}</div>
+            <button className="button" onClick={() => setGameSpeed(prev => prev === 3 ? 1 : prev + 1)}>
+              Speed: {gameSpeed}x
+            </button>
+          </div>
+
+          {activeCrisis && (
+            <div className="crisis-alert">
+              <div className="crisis-title">{activeCrisis.icon} {activeCrisis.name}</div>
+              <div>Impact: {(activeCrisis.impact * 100).toFixed(0)}% | Duration: {crisisDuration} months</div>
+            </div>
+          )}
+
+          <div className="dashboard">
+            <div className="panel">
+              <div className="panel-header">
+                <DollarSign />
+                Financial Empire
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Cash</span>
+                <span className={`stat-value ${cash >= 0 ? 'positive' : 'negative'}`}>
+                  ${(cash / 1000).toFixed(1)}k
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Valuation</span>
+                <span className="stat-value positive">
+                  ${(valuation / 1000000).toFixed(2)}M
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Debt</span>
+                <span className="stat-value negative">
+                  ${(debt / 1000).toFixed(1)}k
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Funding Stage</span>
+                <span className="stat-value">
+                  {FUNDING_STAGES[fundingStage].name}
+                </span>
+              </div>
+              <div className="controls">
+                <button 
+                  className="button success" 
+                  onClick={raiseFunding}
+                  disabled={fundingStage >= FUNDING_STAGES.length - 1 || valuation < FUNDING_STAGES[fundingStage + 1]?.unlock}
+                >
+                  Raise Funding
+                </button>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header">
+                <Factory />
+                Operations
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Workers</span>
+                <span className="stat-value">{workers}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Factories</span>
+                <span className="stat-value">{factories}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Morale</span>
+                <span className={`stat-value ${morale > 0.7 ? 'positive' : morale > 0.4 ? '' : 'negative'}`}>
+                  {(morale * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Monthly Production</span>
+                <span className="stat-value">{production} cars</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Inventory</span>
+                <span className="stat-value">{inventory} cars</span>
+              </div>
+              <div className="controls">
+                <button className="button" onClick={() => { setCash(c => c - 30000); setWorkers(w => w + 10); }}>
+                  Hire Workers (-$30k)
+                </button>
+                <button className="button" onClick={() => { setCash(c => c - 500000); setFactories(f => f + 1); }}>
+                  Build Factory (-$500k)
+                </button>
+                <button className="button danger" onClick={() => { setWorkers(w => Math.max(10, w - 10)); setMorale(m => m * 0.8); addNews('⚠️ Layoffs hurt morale'); }}>
+                  Layoff Workers
+                </button>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header">
+                <TrendingUp />
+                Brand & Market
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Brand Reputation</span>
+                <span className="stat-value positive">{(brandReputation * 100).toFixed(0)}%</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Monthly Marketing</span>
+                <span className="stat-value">${(marketingBudget / 1000).toFixed(0)}k</span>
+              </div>
+              <div className="input-group">
+                <label>Marketing Budget:</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="500000" 
+                  step="10000"
+                  value={marketingBudget}
+                  onChange={(e) => setMarketingBudget(Number(e.target.value))}
+                />
+              </div>
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${brandReputation * 100}%` }} />
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header">
+                <Cpu />
+                Research & Development
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">R&D Investment</span>
+                <span className="stat-value">${(rdInvestment / 1000).toFixed(0)}k</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Unlocked Models</span>
+                <span className="stat-value">{unlockedModels.length}/{CAR_MODELS.length}</span>
+              </div>
+              <div className="controls">
+                <button className="button" onClick={() => { setCash(c => c - 100000); setRdInvestment(r => r + 100000); }}>
+                  Invest $100k in R&D
+                </button>
+                <button className="button" onClick={() => { setCash(c => c - 500000); setRdInvestment(r => r + 500000); }}>
+                  Invest $500k in R&D
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="panel" style={{ marginBottom: '20px' }}>
+            <div className="panel-header">
+              <Settings />
+              Factory Floor - Live Production
+            </div>
+            <FactoryFloor workers={workers} efficiency={morale} producing={production > 0} />
+          </div>
+
+          <div className="panel" style={{ marginBottom: '20px' }}>
+            <div className="panel-header">
+              <Camera />
+              Vehicle Models
+            </div>
+            <div className="model-selector">
+              {CAR_MODELS.map(model => (
+                <div 
+                  key={model.id}
+                  className={`model-card ${currentModel === model.id ? 'active' : ''} ${!unlockedModels.includes(model.id) ? 'locked' : ''}`}
+                  onClick={() => unlockedModels.includes(model.id) && setCurrentModel(model.id)}
+                >
+                  <div className="model-name">{model.name}</div>
+                  <div className="model-price">${(model.price / 1000).toFixed(0)}k</div>
+                  {!unlockedModels.includes(model.id) && (
+                    <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '5px' }}>
+                      🔒 R&D: ${(model.r_d / 1000).toFixed(0)}k
+                    </div>
+                  )}
+                  {unlockedModels.includes(model.id) && model.id === currentModel && (
+                    <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '5px' }}>
+                      ✓ In Production
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-header">
+              <Award />
+              Company News
+            </div>
+            <div className="news-feed">
+              {newsLog.map((news, idx) => (
+                <div key={idx} className="news-item">{news}</div>
+              ))}
+            </div>
+          </div>
+
+          {autonomousDrivingEnabled && (
+            <div style={{ 
+              position: 'fixed', 
+              bottom: '20px', 
+              right: '20px', 
+              background: 'rgba(59, 130, 246, 0.9)', 
+              padding: '10px 20px', 
+              borderRadius: '8px',
+              fontWeight: '700',
+              boxShadow: '0 4px 20px rgba(59, 130, 246, 0.5)'
+            }}>
+              🤖 Autonomous Era Active
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // Render app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ModernMotorTycoon />);
+  </script>
+</body>
+</html>
